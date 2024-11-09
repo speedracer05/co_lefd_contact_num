@@ -10,6 +10,40 @@ _site/
 # Additional Ruby/bundler ignore for when you run: bundle install
 /vendor
 
+# Python Specific
+venv/
+.env/
+__pycache__/
+*.py[cod]
+*.pyo
+.ipynb_checkpoints/
+
+# IDE and Editor files
+.vscode/
+.idea/
+.project
+.classpath
+.settings/
+*.swp
+*.swo
+
+# Dependency Files
+node_modules/
+npm-debug.log
+Pipfile.lock
+poetry.lock
+
+# Environmental Files
+.env
+.env.local
+
+# Logs and Temp Files
+*.log
+*.tmp
+*.temp
+*.bak
+*.orig
+
 # Specific ignore for GitHub Pages
 # GitHub Pages will always use its own deployed version of pages-gem 
 # This means GitHub Pages will NOT use your Gemfile.lock and therefore it is

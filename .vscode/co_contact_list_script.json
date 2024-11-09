@@ -1,0 +1,17 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python Debugger: Current File",
+            "type": "python",  // Corrected to use "python" for VS Code debugger
+            "request": "launch",
+            "program": "C:/Users/jchan/csi360_fire_police/co_lefd_contact_num/co_contact_list_script.py", // Corrected path format
+            "console": "integratedTerminal"
+            "justMyCode": false  // Add this line to include all code
+
+        }
+    ]
+}
