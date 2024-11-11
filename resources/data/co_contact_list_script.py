@@ -24,6 +24,9 @@ chrome_options = Options()
 # Start the Chrome WebDriver
 driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
 
+# Initialize 'data' as an empty list
+data = []  # This needs to be defined before it's used in data.append(...)
+
 
 # %%
 # Helper Functions for Data Extraction
@@ -46,9 +49,6 @@ def safe_extract_text(soup, selector, default=""):
     element = soup.select_one(selector)
     return element.get_text(strip=True) if element else default
 
-# Initialize 'data' as an empty list
-data = []  # This needs to be defined before it's used in data.append(...)
-
 
 # Data extraction function
 def extract_data_from_page(url, data):
@@ -64,9 +64,11 @@ def extract_data_from_page(url, data):
 
 # %%
 # Parse page content
-soup = BeautifulSoup(driver.page_source, "html.parser")
+soup = BeautifulSoup(driver.page_source, "html.parser") #remove to better target nested element departmentname
+center_column = soup.find("div", class_="centercolumndepartment") # Insert to provide better targeting of departmentname
 department_name = safe_extract_text(soup, "h1.departmentname")
 title = safe_extract_text(soup, "div.title")
+print("Department Name:", department_name)  # Debug print
 
 logging.info(f"Department Name: {department_name}, Title: {title}")
 
@@ -113,9 +115,6 @@ base_url = "https://www.usacops.com/co/shrflist.html"
 driver.get(base_url)
 soup = BeautifulSoup(driver.page_source, "html.parser")
 
-# Initialize empty list to store data
-data = []
-
 # Find both divs with the class "centercolumnnested2all links within main page"
 link_divs = soup.find_all("div", class_="centercolumnnested2")
 
@@ -125,12 +124,25 @@ for link_div in link_divs:
     for link in links:
         target_url = urljoin(base_url, link["href"])
         extract_data_from_page(target_url, data)
-        
-
 
         # Delay adjust between requests to prevent timeout
-        time.sleep(.3) # Adjust as needed for server load
+        time.sleep(3) # Adjust as needed for server load
 
+print(soup.prettify())  # View the full HTML structure for debugging
+
+
+print("Extracted data:", {
+    "department_name": department_name,
+    "title": title,
+    "first_name": first_name,
+    "last_name": last_name,
+    "building_name": building_name,
+    "address": address,
+    "city": city,
+    "state": state,
+    "zip_code": zip_code,
+    "county": county
+})
 
 # %%
 # Save Data to CSV
