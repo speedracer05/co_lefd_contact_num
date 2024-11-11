@@ -7,6 +7,8 @@ import time
 import re
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from selenium.common.exceptions import NoSuchElementException
@@ -49,11 +51,35 @@ def safe_extract_text(soup, selector, default=""):
     element = soup.select_one(selector)
     return element.get_text(strip=True) if element else default
 
-
-# Data extraction function
+# Updated extract_data_from_page function
 def extract_data_from_page(url, data):
     logging.info(f"Extracting data from: {url}")
     driver.get(url)
+    
+    # Wait for the "centercolumndepartment" div to load
+    try:
+        center_column = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.CLASS_NAME, "centercolumndepartment"))
+        )
+    except:
+        logging.warning("centercolumndepartment not found after waiting")
+        return  # Exit function if the element is not found
+    
+    # Now, try finding the department name within this div
+    try:
+        department_name_element = center_column.find_element(By.TAG_NAME, "h1")
+        department_name = department_name_element.text.strip()
+    except NoSuchElementException:
+        department_name = ""
+    print("Department Name:", department_name)  # Debug print
+
+    # Similarly, extract other fields directly with Selenium
+    try:
+        title_element = driver.find_element(By.CLASS_NAME, "title")
+        title = title_element.text.strip()
+    except NoSuchElementException:
+        title = ""
+    print("Title:", title)  # Debug print
 
     # Function to Close Google Ads
     if "#google_vignette" in driver.current_url:
@@ -126,9 +152,12 @@ for link_div in link_divs:
         extract_data_from_page(target_url, data)
 
         # Delay adjust between requests to prevent timeout
-        time.sleep(3) # Adjust as needed for server load
+        time.sleep(2) # Adjust as needed for server load
 
-print(soup.prettify())  # View the full HTML structure for debugging
+# Print the full HTML after waiting
+html = driver.page_source
+soup = BeautifulSoup(html, "html.parser")
+print(soup.prettify())
 
 
 print("Extracted data:", {
