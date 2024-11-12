@@ -1,7 +1,5 @@
 # %%
 # Import Libraries
-# import requests
-# from bs4 import BeautifulSoup
 import pandas as pd
 import time
 import re
@@ -12,6 +10,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import StaleElementReferenceException
 from urllib.parse import urljoin  # For handling relative URLs
 from webdriver_manager.chrome import ChromeDriverManager
 import logging
@@ -53,12 +52,12 @@ def close_google_ad():
 
 
 # Data extraction function
-def extract_data_from_page(url, data):
+def extract_data_from_page(url):
     logging.info(f"Extracting data from: {url}")
     driver.get(url)
     
     # Close Google ad if present
-    close_google_ad
+    close_google_ad()
     
     # Wait for the "centercolumndepartment" div to load
     try:
@@ -95,8 +94,8 @@ def extract_data_from_page(url, data):
         name_parts = info_text[0].split()
         first_name = name_parts[0] if len(name_parts) > 0 else ""
         last_name = name_parts[1] if len(name_parts) > 1 else ""
-        
-        #*******CONTINUE 
+
+
         # Optional: Extract building name if present
         building_name = info_text[1] if "Headquarters" in info_text[1] else ""
         address_index = 2 if building_name else 1  # Adjust index based on presence of building name
@@ -106,6 +105,7 @@ def extract_data_from_page(url, data):
         city_state_zip = info_text[address_index + 1]
         city, state_zip = city_state_zip.split(", ")
         state, zip_code = state_zip.split() if " " in state_zip else (state_zip, "")
+        state = format_state(state)  # Format state to use abbreviations
 
         # Extract phone number using a regular expression
         phone_line = next((line for line in info_text if "Phone:" in line), "")
@@ -147,16 +147,45 @@ def extract_data_from_page(url, data):
     })
 
 
-
-
-
 # %%
 # Main Extraction Process
+def main():
+    base_url = "https://www.usacops.com/co/shrflist.html"
+    driver.get(base_url)
 
-# Define base URL
-base_url = "https://www.usacops.com/co/shrflist.html"
+    while True:
+        # Re-fetch the main page to avoid stale element
+        driver.get(base_url)
+        time.sleep(2)  # Add delay to ensure page fully loads
 
+        # Find all links in divs with class "centercolumnnested2"
+        link_divs = driver.find_elements(By.CLASS_NAME, "centercolumnnested2")
 
+        # Loop through each div and collect links
+        for link_div in link_divs:
+            try:
+                links = link_div.find_elements(By.TAG_NAME, "a")
+                for link in links:
+                    try:
+                        target_url = urljoin(base_url, link.get_attribute("href"))
+                        extract_data_from_page(target_url)
+                        time.sleep(2)  # Adjust delay if server load changes
+                    except StaleElementReferenceException:
+                        logging.warning("StaleElementReferenceException encountered. Retrying...")
+                        # Reload link_divs and links if stale element issue occurs
+                        continue  # Skip to the next iteration
+            except StaleElementReferenceException:
+                logging.warning("Link became stale. Restarting div search.")
+                break  # Break inner loop and refresh link_div if stale exception occurs
+
+            break
+
+        except StaleElementReferenceException:
+            logging.warning("Link divs became stale. Retrying entire link_divs block.")
+            time.sleep(1) # Brief pause before retrying outer loop
+# Run the main function to start extraction
+main()
+    
 # %%
 # Save Data to CSV
 df = pd.DataFrame(data, columns=[
@@ -172,6 +201,3 @@ logging.info(f"Data successfully saved to {output_path}")
 driver.quit()
 
 # %%
-
-
-
