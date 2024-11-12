@@ -154,35 +154,37 @@ def main():
     driver.get(base_url)
 
     while True:
-        # Re-fetch the main page to avoid stale element
-        driver.get(base_url)
-        time.sleep(2)  # Add delay to ensure page fully loads
+        try:
+            # Re-fetch the main page to avoid stale element
+            driver.get(base_url)
+            time.sleep(2)  # Add delay to ensure page fully loads
 
-        # Find all links in divs with class "centercolumnnested2"
-        link_divs = driver.find_elements(By.CLASS_NAME, "centercolumnnested2")
+            # Find all links in divs with class "centercolumnnested2"
+            link_divs = driver.find_elements(By.CLASS_NAME, "centercolumnnested2")
 
-        # Loop through each div and collect links
-        for link_div in link_divs:
-            try:
-                links = link_div.find_elements(By.TAG_NAME, "a")
-                for link in links:
-                    try:
-                        target_url = urljoin(base_url, link.get_attribute("href"))
-                        extract_data_from_page(target_url)
-                        time.sleep(2)  # Adjust delay if server load changes
-                    except StaleElementReferenceException:
-                        logging.warning("StaleElementReferenceException encountered. Retrying...")
-                        # Reload link_divs and links if stale element issue occurs
-                        continue  # Skip to the next iteration
-            except StaleElementReferenceException:
-                logging.warning("Link became stale. Restarting div search.")
-                break  # Break inner loop and refresh link_div if stale exception occurs
+            # Loop through each div and collect links
+            for link_div in link_divs:
+                try:
+                    links = link_div.find_elements(By.TAG_NAME, "a")
+                    for link in links:
+                        try:
+                            target_url = urljoin(base_url, link.get_attribute("href"))
+                            extract_data_from_page(target_url)
+                            time.sleep(2)  # Adjust delay if server load changes
+                        except StaleElementReferenceException:
+                            logging.warning("StaleElementReferenceException encountered. Retrying...")
+                            # Reload link_divs and links if stale element issue occurs
+                            continue  # Skip to the next iteration
+                except StaleElementReferenceException:
+                    logging.warning("Link became stale. Restarting div search.")
+                    break  # Break inner loop and refresh link_div if stale exception occurs
 
-            break
+                break # If ok, then break the main loop
 
         except StaleElementReferenceException:
             logging.warning("Link divs became stale. Retrying entire link_divs block.")
             time.sleep(1) # Brief pause before retrying outer loop
+
 # Run the main function to start extraction
 main()
     

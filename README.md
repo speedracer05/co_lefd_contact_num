@@ -1,7 +1,7 @@
 # Colorado Law Enforcement and Fire Department Scraper for CSI360
 
 <p align="center">
-<img src="images/CSI360-Logo-2022.png" width="720">
+<img src="image/CSI360-Logo-2022.png" width="180">
 </p>
 
 ## Description
